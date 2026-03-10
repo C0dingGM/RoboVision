@@ -1,0 +1,24 @@
+# Virtual Environment
+venv/
+env/
+*.pyc
+__pycache__/
+
+# YOLO model files
+*.pt
+runs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+*.egg-info/
+dist/
+build/

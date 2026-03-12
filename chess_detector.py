@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import numpy as np
 
 class ChessDetector:
-    def __init__(self, model_path='yolov8n.pt'):
+    def __init__(self, model_path='runs/detect/chess_pieces_1/weights/best.pt'):
         """
         Initialize chess piece detector
         Args:
@@ -11,12 +11,12 @@ class ChessDetector:
         """
         self.model = YOLO(model_path)
         
-    def detect_pieces(self, frame):
+    def detect_pieces(self, frame, conf_threshold=0.25):
         """
         Detect chess pieces in frame
         Returns: annotated frame and detections
         """
-        results = self.model(frame)
+        results = self.model(frame, conf=conf_threshold, verbose=False)
         
         detections = []
         for result in results:
@@ -40,6 +40,10 @@ class ChessDetector:
                 cv2.putText(frame, label, (int(x1), int(y1)-10), 
                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
+        # Add detection count to frame
+        cv2.putText(frame, f"Detected: {len(detections)} pieces", (10, 30),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+        
         return frame, detections
 
     def run_camera(self, camera_id=0):
@@ -51,7 +55,19 @@ class ChessDetector:
         cap = cv2.VideoCapture(camera_id)
         
         if not cap.isOpened():
-            print("Error: Cannot open camera")
+            print(f"Error: Cannot open camera {camera_id}")
+            print("Possible solutions:")
+            print("1. Check if camera permissions are granted in System Settings > Privacy & Security > Camera")
+            print("2. Make sure no other app is using the camera")
+            print("3. Try a different camera ID (e.g., camera_id=1)")
+            return
+        
+        # Try reading a test frame
+        ret, test_frame = cap.read()
+        if not ret:
+            print("Error: Camera opened but cannot read frames")
+            print("Try closing other applications using the camera")
+            cap.release()
             return
         
         print("Press 'q' to quit")
@@ -62,7 +78,12 @@ class ChessDetector:
                 print("Error: Cannot read frame")
                 break
             
-            annotated_frame, detections = self.detect_pieces(frame)
+            annotated_frame, detections = self.detect_pieces(frame, conf_threshold=0.05)
+            
+            # Print detections for debugging
+            if detections:
+                for det in detections:
+                    print(f"Found: {det['name']} ({det['confidence']:.2f})")
             
             cv2.imshow('Chess Piece Detection', annotated_frame)
             

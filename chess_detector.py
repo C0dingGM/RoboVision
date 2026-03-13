@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import numpy as np
 
 class ChessDetector:
-    def __init__(self, model_path='runs/detect/chess_pieces_1/weights/best.pt'):
+    def __init__(self, model_path='runs/detect/chess_pieces_14/weights/best.pt'):
         """
         Initialize chess piece detector
         Args:

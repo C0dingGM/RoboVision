@@ -9,16 +9,16 @@ api_key = os.getenv('ROBOFLOW_API_KEY')
 
 # Initialize Roboflow and download dataset
 rf = Roboflow(api_key=api_key)
-project = rf.workspace("wangs-workspace-ahzkf").project("chess-pieces-sywaj-f4o6a")
+project = rf.workspace("wangs-workspace-ahzkf").project("chess-full-yc6fm")
 dataset = project.version(1).download("yolov8")
 
-# Train the model with GPU acceleration
-model = YOLO('yolov8n.pt')
+# Train the model with GPU acceleration (stable settings)
+model = YOLO('yolo11n.pt')
 results = model.train(
     data=f"{dataset.location}/data.yaml",
     epochs=100,
     imgsz=640,
-    batch=16,
+    batch=32,  # Increased for faster training
     device='mps',  # Use Apple Silicon GPU
     name='chess_detection'
 )

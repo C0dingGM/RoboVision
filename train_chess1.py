@@ -1,12 +1,16 @@
 from ultralytics import YOLO
+import os
 
-# Load pre-trained YOLOv8 model
-model = YOLO('yolov8n.pt')
+# Change to script directory
+os.chdir('/Users/yutian/Desktop/APCS/RoboVision')
+
+# Load pre-trained YOLOv11 model
+model = YOLO('yolo11n')  # Will auto-download if needed
 
 # Train the model on Chess-pieces-1 dataset
 results = model.train(
-    data='Chess-pieces-1/data.yaml',
-    epochs=100,
+    data='Chess-Pieces-1/data.yaml',
+    epochs=50,
     imgsz=640,
     batch=16,
     name='chess_pieces_1',

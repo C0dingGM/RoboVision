@@ -10,6 +10,7 @@ class ChessDetector:
             model_path: Path to YOLO model (use pretrained or custom trained)
         """
         self.model = YOLO(model_path)
+        self.show_grid = False
         
     def detect_pieces(self, frame, conf_threshold=0.25):
         """
@@ -45,6 +46,42 @@ class ChessDetector:
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
         
         return frame, detections
+    
+    def draw_grid(self, frame, grid_size=8, x_offset=50, y_offset=50, cell_size=80):
+        """
+        Draw an 8x8 grid overlay on the frame
+        Args:
+            frame: Input frame
+            grid_size: Number of rows/columns (default 8 for chessboard)
+            x_offset: X position of top-left corner
+            y_offset: Y position of top-left corner
+            cell_size: Size of each grid cell in pixels
+        """
+        board_size = cell_size * grid_size
+        
+        # Draw vertical lines
+        for i in range(grid_size + 1):
+            x = x_offset + i * cell_size
+            cv2.line(frame, (x, y_offset), (x, y_offset + board_size), (255, 0, 0), 2)
+        
+        # Draw horizontal lines
+        for i in range(grid_size + 1):
+            y = y_offset + i * cell_size
+            cv2.line(frame, (x_offset, y), (x_offset + board_size, y), (255, 0, 0), 2)
+        
+        # Add chess board labels (a-h, 1-8)
+        files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+        for i, file in enumerate(files):
+            x = x_offset + i * cell_size + cell_size // 2 - 10
+            cv2.putText(frame, file, (x, y_offset - 10), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+        
+        for i in range(grid_size):
+            y = y_offset + i * cell_size + cell_size // 2 + 5
+            cv2.putText(frame, str(8 - i), (x_offset - 30, y), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+        
+        return frame
 
     def run_camera(self, camera_id=0):
         """
@@ -71,6 +108,7 @@ class ChessDetector:
             return
         
         print("Press 'q' to quit")
+        print("Press 'g' to toggle grid overlay")
         
         while True:
             ret, frame = cap.read()
@@ -80,6 +118,10 @@ class ChessDetector:
             
             annotated_frame, detections = self.detect_pieces(frame, conf_threshold=0.05)
             
+            # Draw grid if enabled
+            if self.show_grid:
+                annotated_frame = self.draw_grid(annotated_frame)
+            
             # Print detections for debugging
             if detections:
                 for det in detections:
@@ -87,8 +129,12 @@ class ChessDetector:
             
             cv2.imshow('Chess Piece Detection', annotated_frame)
             
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
                 break
+            elif key == ord('g'):
+                self.show_grid = not self.show_grid
+                print(f"Grid overlay: {'ON' if self.show_grid else 'OFF'}")
         
         cap.release()
         cv2.destroyAllWindows()
